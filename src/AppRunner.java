@@ -2,12 +2,16 @@ import enums.ActionLetter;
 import model.*;
 import util.UniversalArray;
 import util.UniversalArrayImpl;
+import java.time.LocalDate;
 
 import java.util.Scanner;
 
 public class AppRunner {
 
     private final UniversalArray<Product> products = new UniversalArrayImpl<>();
+    LocalDate currentDate = LocalDate.now();
+    int currentYear = currentDate.getYear();
+
 
     static Scanner sc = new Scanner(System.in);
 
@@ -70,14 +74,15 @@ public class AppRunner {
             print("Вы пополнили баланс на 10");
             return;
         }
+        if ("h".equalsIgnoreCase(action)) {
+            isExit = true;
+            return;
+        }
         try {
             for (int i = 0; i < products.size(); i++) {
                 if (products.get(i).getActionLetter().equals(ActionLetter.valueOf(action.toUpperCase()))) {
                     payingMethods.setAmount(payingMethods.getAmount() - products.get(i).getPrice());
                     print("Вы купили " + products.get(i).getName());
-                    break;
-                } else if ("h".equalsIgnoreCase(action)) {
-                    isExit = true;
                     break;
                 }
             }
@@ -109,7 +114,7 @@ public class AppRunner {
 
     private void getPayMethod(){
         try{
-            System.out.println("Choose a payment method:");
+            System.out.println("Choose a payment method.");
             System.out.print("Press 'a' for coins, press 'b' for credit/debit card: ");
             String str = sc.nextLine();
             switch (str){
@@ -135,6 +140,10 @@ public class AppRunner {
         showActions(products);
         print(" h - Выйти");
         String action = fromConsole().substring(0, 1);
+        if ("h".equalsIgnoreCase(action)) {
+            isExit = true;
+            return;
+        }
         try {
             for (int i = 0; i < products.size(); i++) {
                 if (products.get(i).getActionLetter().equals(ActionLetter.valueOf(action.toUpperCase()))) {
@@ -166,9 +175,6 @@ public class AppRunner {
             if (isSecond == true)
                 d = d * 2;
 
-            // We add two digits to handle
-            // cases that make two digits
-            // after doubling
             nSum += d / 10;
             nSum += d % 10;
 
@@ -182,13 +188,24 @@ public class AppRunner {
         String cardNumber = sc.nextLine();
         if(checkLuhn(cardNumber)){
             try {
-                System.out.print("Enter card month of expiration: ");
+                System.out.print("Enter card's month of expiration: ");
                 int expirationMonth = Integer.parseInt(sc.nextLine());
-                System.out.print("Enter card year of expiration: ");
+                if(expirationMonth > 12 || expirationMonth < 1){
+                    System.out.println("You entered incorrect expiration month. Try again.");
+                    cardAuthentification();
+                }
+                System.out.print("Enter card's year of expiration: ");
                 int expirationYear = Integer.parseInt(sc.nextLine());
-
-                System.out.print("Enter your cvv: ");
+                if((expirationYear > (currentYear + 5)) || (currentYear > expirationYear)){
+                    System.out.println("You entered incorrect expiration year. Try again.");
+                    cardAuthentification();
+                }
+                System.out.print("Enter card's cvv: ");
                 int cvv = Integer.parseInt(sc.nextLine());
+                if((cvv > 999) || (cvv < 1)){
+                    System.out.println("You entered incorrect cvv. Try again.");
+                    cardAuthentification();
+                }
                 System.out.println("Success! Your card is accepted");
                 return true;
             } catch (NumberFormatException e){
