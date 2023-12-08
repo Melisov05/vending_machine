@@ -6,3 +6,5 @@ git clone
 git checkout
 git commit 
 git status
+git push
+git rm --cached 
