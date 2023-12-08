@@ -1,6 +1,6 @@
 package model;
 
-public class CoinAcceptor implements PayingMethods{
+public class CreditCard implements PayingMethods{
     private int amount;
     private String method;
 
@@ -8,16 +8,16 @@ public class CoinAcceptor implements PayingMethods{
         return method;
     }
 
-    public CoinAcceptor(int amount, String method) {
+    public CreditCard(int amount, String method){
         this.amount = amount;
         this.method = method;
     }
 
-    public int getAmount() {
-        return amount;
-    }
-
     public void setAmount(int amount) {
         this.amount = amount;
+    }
+
+    public int getAmount() {
+        return amount;
     }
 }
