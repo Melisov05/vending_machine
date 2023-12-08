@@ -9,7 +9,9 @@ public class AppRunner {
 
     private final UniversalArray<Product> products = new UniversalArrayImpl<>();
 
-    private final CoinAcceptor coinAcceptor;
+    static Scanner sc = new Scanner(System.in);
+
+    private PayingMethods payingMethods;
 
     private static boolean isExit = false;
 
@@ -22,7 +24,7 @@ public class AppRunner {
                 new Mars(ActionLetter.F, 80),
                 new Pistachios(ActionLetter.G, 130)
         });
-        coinAcceptor = new CoinAcceptor(100);
+        getPayMethod();
     }
 
     public static void run() {
@@ -36,18 +38,22 @@ public class AppRunner {
         print("В автомате доступны:");
         showProducts(products);
 
-        print("Монет на сумму: " + coinAcceptor.getAmount());
+        print("Available amount of money: " + payingMethods.getAmount());
 
         UniversalArray<Product> allowProducts = new UniversalArrayImpl<>();
         allowProducts.addAll(getAllowedProducts().toArray());
-        chooseAction(allowProducts);
+        if(payingMethods.getMethod().equalsIgnoreCase("Credit card")){
+            chooseActionCard(allowProducts);
+        } else if(payingMethods.getMethod().equalsIgnoreCase("coin")){
+            chooseAction(allowProducts);
+        }
 
     }
 
     private UniversalArray<Product> getAllowedProducts() {
         UniversalArray<Product> allowProducts = new UniversalArrayImpl<>();
         for (int i = 0; i < products.size(); i++) {
-            if (coinAcceptor.getAmount() >= products.get(i).getPrice()) {
+            if (payingMethods.getAmount() >= products.get(i).getPrice()) {
                 allowProducts.add(products.get(i));
             }
         }
@@ -55,19 +61,19 @@ public class AppRunner {
     }
 
     private void chooseAction(UniversalArray<Product> products) {
-        print(" a - Пополнить баланс");
+        print(" a - Пополнить баланс монетами");
         showActions(products);
         print(" h - Выйти");
         String action = fromConsole().substring(0, 1);
         if ("a".equalsIgnoreCase(action)) {
-            coinAcceptor.setAmount(coinAcceptor.getAmount() + 10);
+            payingMethods.setAmount(payingMethods.getAmount() + 10);
             print("Вы пополнили баланс на 10");
             return;
         }
         try {
             for (int i = 0; i < products.size(); i++) {
                 if (products.get(i).getActionLetter().equals(ActionLetter.valueOf(action.toUpperCase()))) {
-                    coinAcceptor.setAmount(coinAcceptor.getAmount() - products.get(i).getPrice());
+                    payingMethods.setAmount(payingMethods.getAmount() - products.get(i).getPrice());
                     print("Вы купили " + products.get(i).getName());
                     break;
                 } else if ("h".equalsIgnoreCase(action)) {
@@ -79,8 +85,6 @@ public class AppRunner {
             print("Недопустимая буква. Попрбуйте еще раз.");
             chooseAction(products);
         }
-
-
     }
 
     private void showActions(UniversalArray<Product> products) {
@@ -101,5 +105,100 @@ public class AppRunner {
 
     private void print(String msg) {
         System.out.println(msg);
+    }
+
+    private void getPayMethod(){
+        try{
+            System.out.println("Choose a payment method:");
+            System.out.print("Press 'a' for coins, press 'b' for credit/debit card: ");
+            String str = sc.nextLine();
+            switch (str){
+                case "a":
+                    payingMethods = new CoinAcceptor(100, "coin");
+                    break;
+                case "b":
+                    if(cardAuthentification()){
+                        payingMethods = new CreditCard(500, "credit card");
+                    }
+                    break;
+                default:
+                    System.out.println("You picked a wrong letter, try again");
+                    getPayMethod();
+            }
+        } catch (IllegalArgumentException e){
+            print("You wrote something wrong, try again");
+            getPayMethod();
+        }
+    }
+
+    private void chooseActionCard(UniversalArray<Product> products) {
+        showActions(products);
+        print(" h - Выйти");
+        String action = fromConsole().substring(0, 1);
+        try {
+            for (int i = 0; i < products.size(); i++) {
+                if (products.get(i).getActionLetter().equals(ActionLetter.valueOf(action.toUpperCase()))) {
+                    payingMethods.setAmount(payingMethods.getAmount() - products.get(i).getPrice());
+                    print("Вы купили " + products.get(i).getName());
+                    break;
+                } else if ("h".equalsIgnoreCase(action)) {
+                    isExit = true;
+                    break;
+                }
+            }
+        } catch (IllegalArgumentException e) {
+            print("Недопустимая буква. Попробуйте еще раз.");
+            chooseActionCard(products);
+        }
+    }
+    public static boolean checkLuhn(String cardNo)
+    {
+        cardNo = cardNo.replaceAll("\\s+", "");
+        int nDigits = cardNo.length();
+
+        int nSum = 0;
+        boolean isSecond = false;
+        for (int i = nDigits - 1; i >= 0; i--)
+        {
+
+            int d = cardNo.charAt(i) - '0';
+
+            if (isSecond == true)
+                d = d * 2;
+
+            // We add two digits to handle
+            // cases that make two digits
+            // after doubling
+            nSum += d / 10;
+            nSum += d % 10;
+
+            isSecond = !isSecond;
+        }
+        return (nSum % 10 == 0);
+    }
+
+    private boolean cardAuthentification(){
+        System.out.print("Enter your credit/debit card number: ");
+        String cardNumber = sc.nextLine();
+        if(checkLuhn(cardNumber)){
+            try {
+                System.out.print("Enter card month of expiration: ");
+                int expirationMonth = Integer.parseInt(sc.nextLine());
+                System.out.print("Enter card year of expiration: ");
+                int expirationYear = Integer.parseInt(sc.nextLine());
+
+                System.out.print("Enter your cvv: ");
+                int cvv = Integer.parseInt(sc.nextLine());
+                System.out.println("Success! Your card is accepted");
+                return true;
+            } catch (NumberFormatException e){
+                System.out.println("Either expiration date or cvv is incorrect");
+                cardAuthentification();
+            }
+        } else{
+            System.out.println("The card number is not valid, try again");
+            cardAuthentification();
+        }
+        return false;
     }
 }

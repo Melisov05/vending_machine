@@ -1,10 +1,16 @@
 package model;
 
-public class CoinAcceptor {
+public class CoinAcceptor implements PayingMethods{
     private int amount;
+    private String method;
 
-    public CoinAcceptor(int amount) {
+    public String getMethod() {
+        return method;
+    }
+
+    public CoinAcceptor(int amount, String method) {
         this.amount = amount;
+        this.method = method;
     }
 
     public int getAmount() {
